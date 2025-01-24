@@ -1,8 +1,5 @@
-# Build stage
-FROM node:18-alpine AS builder
-
-# Install necessary build dependencies
-RUN apk add --no-cache python3 make g++
+# Use Node.js LTS version
+FROM node:18 AS builder
 
 WORKDIR /app
 
@@ -10,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -19,21 +16,17 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:18-slim AS production
 
 WORKDIR /app
 
-# Copy built assets from builder
+# Copy built assets
 COPY --from=builder /app/dist ./dist
-COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production
-
-# Install serve globally
+# Install serve
 RUN npm install -g serve
 
-# Expose the port
+# Expose port
 EXPOSE 3000
 
 # Start the server
